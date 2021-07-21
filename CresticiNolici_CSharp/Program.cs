@@ -1,44 +1,93 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Threading;
 
 namespace CresticiNolici_CSharp
 {
 	public class Program
 	{
+        static int player = 1;
+        static int cis_num;
+        static Game game = new Game();
+
         static void Main()
         {
-            Console.WriteLine("Начнём?");
-
-            Game game = new Game();
-            game.Info = PlayInfo;
-            game.Error = PlayError;
-
-            string Player1_Name = "";
-            string Player2_Name = "";
-
-            for (; ; )
+            ConsoleKeyInfo cki;
+            do
             {
-                int cislo = 0;
+                ScreenReload();
+                do
+                {
+                    cki = Console.ReadKey(true);
+                    cis_num = cki.KeyChar - 48;
+                } while (cis_num < 1 || cis_num > 9);
 
-                Console.WriteLine("1. Играть", cislo);
-                Console.WriteLine("2. Выйти", cislo);
-                Console.WriteLine("Игрок 1 введите имя - ", Player1_Name);
-                Console.WriteLine("Игрок 1 введите имя - ", Player2_Name);
-                if (cislo == 1) game.Play();
-                if (cislo == 2) game.Exit();
-            }
+                //  Проверяем занята ли позиция
+                if (game.Free_position(cis_num))
+                {
+                    //  Свободна
+                    //  Делаем ход
+                    if (player % 2 == 0)
+                    {
+                        game.Move(cis_num, 'O');
+                    }
+                    else
+                    {
+                        game.Move(cis_num, 'X');
+                    }
+                    player++;
+                }
+                else
+                {
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.SetCursorPosition(18, 27);
+                    Console.WriteLine("\n\tПозиция занята");
+                    Thread.Sleep(1500);
+                    Console.ResetColor();
 
-            static void PlayInfo(string message)
+                }
+
+            } while (game.GetGameStatus() == '0');
+            ScreenReload();
+
+            if (game.GetGameStatus() == 'v')
             {
-                Console.WriteLine(message);
+                Console.ForegroundColor = ConsoleColor.Green;
+                Console.SetCursorPosition(18, 27);
+                var viner = (player % 2) + 1;
+                var symbol = (viner % 2) == 0 ? 'O' : 'X';
+                Console.WriteLine($"Игрок {viner}: \"{symbol}\" выиграл.");
+                Console.ResetColor();
             }
-            static void PlayError(string message)
+            else
             {
-                Console.WriteLine(message);
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.SetCursorPosition(23, 27);
+                Console.WriteLine("Ничья :)");
+                Console.ResetColor();
             }
+            Console.ReadKey();
+        }
+        static void ScreenReload()
+        {
+            Console.Clear();
+            Console.WriteLine("\t\tНачнём игру");
+            game.Board();
+
+            Console.ForegroundColor = ConsoleColor.Blue;
+            if (game.GetGameStatus() == '0')
+            {
+                Console.SetCursorPosition(18, 27);
+                Console.Write("Ходит - ");
+                if (player % 2 == 0)
+                {
+                    Console.Write("Игрок 2: \"O\"");
+                }
+                else
+                {
+                    Console.Write("Игрок 1: \"X\"");
+                }
+            }
+            Console.ResetColor();
         }
     }
 }
